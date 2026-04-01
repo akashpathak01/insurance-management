@@ -52,7 +52,7 @@ const StatCard = ({ stat }) => (
 export function Dashboard() {
   const { user } = useAuthStore();
 
-  const renderSuperAdmin = () => (
+  const renderAdmin = () => (
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.global.map((stat, i) => <StatCard key={i} stat={stat} />)}
@@ -261,7 +261,7 @@ export function Dashboard() {
 
   const getDashboardContent = () => {
     switch (user?.role) {
-      case roles.SUPER_ADMIN: return renderSuperAdmin();
+      case roles.SUPER_ADMIN: return renderAdmin();
       case roles.MANAGER: return renderManager();
       case roles.STAFF: return renderStaff();
       case roles.UNDERWRITER: return renderUnderwriter();

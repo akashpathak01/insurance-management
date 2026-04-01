@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 const roles = {
-  SUPER_ADMIN: 'Super Admin',
+  SUPER_ADMIN: 'Admin',
   MANAGER: 'Manager',
   STAFF: 'Staff',
   UNDERWRITER: 'Underwriter',

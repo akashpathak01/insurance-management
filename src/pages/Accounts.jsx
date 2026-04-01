@@ -3,12 +3,15 @@ import { clsx } from 'clsx';
 import { Search, Filter, Plus, User, Mail, Phone, ChevronRight, Share2, Edit2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAccountStore } from '../store/useAccountStore';
+import { useAuthStore, roles } from '../store/useAuthStore';
 import { Modal, Button } from '../components/ui';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
 export function Accounts() {
+  const { user } = useAuthStore();
   const { accounts, addAccount, updateAccount, deleteAccount } = useAccountStore();
+  const isUnderwriter = user?.role === roles.UNDERWRITER;
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -89,13 +92,15 @@ export function Accounts() {
             <Share2 size={18} />
             Export Data
           </button>
-          <button 
-            onClick={handleOpenAdd}
-            className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all font-bold shadow-lg shadow-primary/20"
-          >
-            <Plus size={18} />
-            Add Account
-          </button>
+          {!isUnderwriter && (
+            <button 
+              onClick={handleOpenAdd}
+              className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all font-bold shadow-lg shadow-primary/20"
+            >
+              <Plus size={18} />
+              Add Account
+            </button>
+          )}
         </div>
       </div>
 
@@ -182,18 +187,22 @@ export function Accounts() {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => handleOpenEdit(acc)}
-                        className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleOpenDelete(acc.id)}
-                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {!isUnderwriter && (
+                        <>
+                          <button 
+                            onClick={() => handleOpenEdit(acc)}
+                            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleOpenDelete(acc.id)}
+                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
                       <button 
                         onClick={() => navigate(`/accounts/${acc.id}`)}
                         className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all"

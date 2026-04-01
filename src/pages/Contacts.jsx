@@ -3,12 +3,15 @@ import { twMerge } from 'tailwind-merge';
 import { Search, Plus, Filter, Mail, Phone, User, ArrowRight, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useContactStore } from '../store/useContactStore';
+import { useAuthStore, roles } from '../store/useAuthStore';
 import { useAccountStore } from '../store/useAccountStore';
 import { Modal, Button } from '../components/ui';
 import toast from 'react-hot-toast';
 
 export function Contacts() {
+  const { user } = useAuthStore();
   const { contacts, addContact, updateContact, deleteContact } = useContactStore();
+  const isUnderwriter = user?.role === roles.UNDERWRITER;
   const { accounts } = useAccountStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,13 +91,15 @@ export function Contacts() {
           <h1 className="text-3xl font-bold text-slate-800">Contacts</h1>
           <p className="text-slate-500 font-medium italic">Relationship Management & Connections</p>
         </div>
-        <button 
-          onClick={handleOpenAdd}
-          className="gradient-btn font-bold flex items-center gap-2"
-        >
-          <Plus size={18} />
-          New Contact
-        </button>
+        {!isUnderwriter && (
+          <button 
+            onClick={handleOpenAdd}
+            className="gradient-btn font-bold flex items-center gap-2"
+          >
+            <Plus size={18} />
+            New Contact
+          </button>
+        )}
       </div>
 
       <div className="premium-card p-4 mb-6">
@@ -127,18 +132,22 @@ export function Contacts() {
             className="premium-card p-6 flex flex-col items-center text-center group cursor-pointer relative"
           >
             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleOpenEdit(c); }}
-                className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-all"
-              >
-                <Edit2 size={16} />
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleOpenDelete(c.id); }}
-                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-50 rounded-lg transition-all"
-              >
-                <Trash2 size={16} />
-              </button>
+              {!isUnderwriter && (
+                <>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleOpenEdit(c); }}
+                    className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-all"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleOpenDelete(c.id); }}
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-50 rounded-lg transition-all"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </>
+              )}
             </div>
             
             <div className="w-20 h-20 rounded-full border-4 border-slate-50 overflow-hidden mb-4 shadow-sm group-hover:border-primary/20 transition-all">

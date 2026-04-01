@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from './store/useAuthStore';
+import { useAuthStore, roles } from './store/useAuthStore';
 import { MainLayout } from './components/layout/MainLayout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
@@ -23,6 +23,15 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
+function RoleProtectedRoute({ children, allowedRoles }) {
+  const { isAuthenticated, user } = useAuthStore();
+  
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (!allowedRoles.includes(user?.role)) return <Navigate to="/" />;
+  
+  return children;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -39,14 +48,34 @@ function App() {
           <Route path="accounts/:id" element={<AccountDetail />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="policies" element={<Policies />} />
-          <Route path="products" element={<Products />} />
-          <Route path="networth" element={<NetWorth />} />
+          <Route path="products" element={
+            <RoleProtectedRoute allowedRoles={[roles.ADMIN, roles.MANAGER, roles.STAFF]}>
+              <Products />
+            </RoleProtectedRoute>
+          } />
+          <Route path="networth" element={
+            <RoleProtectedRoute allowedRoles={[roles.ADMIN, roles.MANAGER, roles.STAFF]}>
+              <NetWorth />
+            </RoleProtectedRoute>
+          } />
           <Route path="cases" element={<Cases />} />
-          <Route path="approvals" element={<Approvals />} />
+          <Route path="approvals" element={
+            <RoleProtectedRoute allowedRoles={[roles.ADMIN, roles.MANAGER]}>
+              <Approvals />
+            </RoleProtectedRoute>
+          } />
           <Route path="documents" element={<Documents />} />
           <Route path="reports" element={<Reports />} />
-          <Route path="users" element={<Users />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="users" element={
+            <RoleProtectedRoute allowedRoles={[roles.ADMIN, roles.MANAGER]}>
+              <Users />
+            </RoleProtectedRoute>
+          } />
+          <Route path="settings" element={
+            <RoleProtectedRoute allowedRoles={[roles.ADMIN]}>
+              <Settings />
+            </RoleProtectedRoute>
+          } />
         </Route>
       </Routes>
       <Toaster position="top-right" />

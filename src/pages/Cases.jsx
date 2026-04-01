@@ -17,6 +17,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useCaseStore } from '../store/useCaseStore';
+import { useAuthStore, roles } from '../store/useAuthStore';
 import { useAccountStore } from '../store/useAccountStore';
 import { usePolicyStore } from '../store/usePolicyStore';
 import { Modal, Button } from '../components/ui';
@@ -30,7 +31,9 @@ const steps = [
 ];
 
 export function Cases() {
+  const { user } = useAuthStore();
   const { cases, addCase, updateCase, deleteCase } = useCaseStore();
+  const isUnderwriter = user?.role === roles.UNDERWRITER;
   const { accounts } = useAccountStore();
   const { policies } = usePolicyStore();
 
@@ -83,13 +86,15 @@ export function Cases() {
           <h1 className="text-3xl font-bold text-slate-800">Claims Management</h1>
           <p className="text-slate-500 font-medium italic">Status Flow: New → Review → Decision → Closed</p>
         </div>
-        <button 
-          onClick={handleOpenAdd}
-          className="gradient-btn flex items-center gap-2"
-        >
-          <Plus size={18} />
-          Initiate New Claim
-        </button>
+        {!isUnderwriter && (
+          <button 
+            onClick={handleOpenAdd}
+            className="gradient-btn flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Initiate New Claim
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6">
@@ -125,12 +130,14 @@ export function Cases() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => deleteCase(c.id)}
-                  className="p-2 text-slate-300 hover:text-rose-500 transition-colors hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 size={18} />
-                </button>
+                {!isUnderwriter && (
+                  <button 
+                    onClick={() => deleteCase(c.id)}
+                    className="p-2 text-slate-300 hover:text-rose-500 transition-colors hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
                 <button className="p-2 text-slate-400 hover:text-primary transition-colors hover:bg-slate-50 rounded-lg">
                   <MessageSquare size={18} />
                 </button>

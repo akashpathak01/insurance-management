@@ -3,13 +3,16 @@ import { twMerge } from 'tailwind-merge';
 import { FileText, Download, Trash2, Eye, Plus, Search, Folder, File, Share2, MoreVertical, Shield, Upload, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDocumentStore } from '../store/useDocumentStore';
+import { useAuthStore, roles } from '../store/useAuthStore';
 import { useAccountStore } from '../store/useAccountStore';
 import { usePolicyStore } from '../store/usePolicyStore';
 import { Modal, Button } from '../components/ui';
 import toast from 'react-hot-toast';
 
 export function Documents() {
+  const { user } = useAuthStore();
   const { documents, addDocument, deleteDocument } = useDocumentStore();
+  const isUnderwriter = user?.role === roles.UNDERWRITER;
   const { accounts } = useAccountStore();
   const { policies } = usePolicyStore();
 
@@ -67,13 +70,15 @@ export function Documents() {
             <Folder size={18} />
             New Folder
           </button>
-          <button 
-            onClick={handleOpenAdd}
-            className="gradient-btn flex items-center gap-2 font-bold shadow-lg shadow-primary/20"
-          >
-            <Plus size={18} />
-            Upload File
-          </button>
+          {!isUnderwriter && (
+            <button 
+              onClick={handleOpenAdd}
+              className="gradient-btn flex items-center gap-2 font-bold shadow-lg shadow-primary/20"
+            >
+              <Plus size={18} />
+              Upload File
+            </button>
+          )}
         </div>
       </div>
 
@@ -152,12 +157,14 @@ export function Documents() {
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"><Eye size={16} /></button>
                       <button className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"><Download size={16} /></button>
-                      <button 
-                        onClick={() => deleteDocument(doc.id)}
-                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {!isUnderwriter && (
+                        <button 
+                          onClick={() => deleteDocument(doc.id)}
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </motion.tr>

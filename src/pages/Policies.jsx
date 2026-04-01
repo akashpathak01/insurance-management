@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge';
 import { Shield, Clock, AlertCircle, CheckCircle2, ChevronRight, FileText, Calendar, DollarSign, Plus, ArrowRight, ArrowLeft, Upload, Trash2, Edit2, ArrowUpRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePolicyStore } from '../store/usePolicyStore';
+import { useAuthStore, roles } from '../store/useAuthStore';
 import { useAccountStore } from '../store/useAccountStore';
 import { useProductStore } from '../store/useProductStore';
 import { useDocumentStore } from '../store/useDocumentStore';
@@ -24,7 +25,9 @@ const StatusBadge = ({ status }) => {
 };
 
 export function Policies() {
+  const { user } = useAuthStore();
   const { policies, addPolicy, deletePolicy } = usePolicyStore();
+  const isUnderwriter = user?.role === roles.UNDERWRITER;
   const { accounts } = useAccountStore();
   const { products } = useProductStore();
   const { addDocument } = useDocumentStore();
@@ -259,10 +262,12 @@ export function Policies() {
              <Calendar size={18} />
              Next 30 Days
            </div>
-           <button onClick={handleOpenWizard} className="gradient-btn font-bold flex items-center gap-2 shadow-lg shadow-primary/20">
-             <Plus size={18} />
-             Issue New Policy
-           </button>
+           {!isUnderwriter && (
+             <button onClick={handleOpenWizard} className="gradient-btn font-bold flex items-center gap-2 shadow-lg shadow-primary/20">
+               <Plus size={18} />
+               Issue New Policy
+             </button>
+           )}
         </div>
       </div>
 
@@ -326,12 +331,14 @@ export function Policies() {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => handleOpenDelete(p.id)}
-                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white rounded-lg transition-all shadow-sm"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {!isUnderwriter && (
+                        <button 
+                          onClick={() => handleOpenDelete(p.id)}
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white rounded-lg transition-all shadow-sm"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                       <button 
                         onClick={() => navigate(`/policies/${p.id}`)}
                         className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all"

@@ -29,3 +29,23 @@ export function Card({ className, children, ...props }) {
     </div>
   );
 }
+
+export function Badge({ children, variant = 'primary', className }) {
+  const variants = {
+    primary: 'bg-primary/10 text-primary',
+    secondary: 'bg-slate-100 text-slate-600',
+    success: 'bg-emerald-50 text-emerald-600',
+    warning: 'bg-amber-50 text-amber-600',
+    danger: 'bg-rose-50 text-rose-600',
+  };
+
+  return (
+    <span className={twMerge(
+      'px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest',
+      variants[variant],
+      className
+    )}>
+      {children}
+    </span>
+  );
+}

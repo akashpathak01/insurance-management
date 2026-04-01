@@ -14,6 +14,7 @@ import { Reports } from './pages/Reports';
 import { Contacts } from './pages/Contacts';
 import { Users } from './pages/Users';
 import { Settings } from './pages/Settings';
+import { Approvals } from './pages/Approvals';
 import { AccountDetail } from './pages/AccountDetail';
 import { Toaster } from 'react-hot-toast';
 
@@ -41,6 +42,7 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="networth" element={<NetWorth />} />
           <Route path="cases" element={<Cases />} />
+          <Route path="approvals" element={<Approvals />} />
           <Route path="documents" element={<Documents />} />
           <Route path="reports" element={<Reports />} />
           <Route path="users" element={<Users />} />

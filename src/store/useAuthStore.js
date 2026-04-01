@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 const roles = {
-  SUPER_ADMIN: 'Admin',
+  ADMIN: 'Admin',
   MANAGER: 'Manager',
   STAFF: 'Staff',
   UNDERWRITER: 'Underwriter',
@@ -10,7 +10,12 @@ const roles = {
 const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
-  login: (userData) => set({ user: userData, isAuthenticated: true }),
+  login: (userData) => {
+    // Normalize legacy roles
+    const normalizedUser = { ...userData };
+    if (normalizedUser.role === 'Super Admin') normalizedUser.role = roles.ADMIN;
+    set({ user: normalizedUser, isAuthenticated: true });
+  },
   logout: () => set({ user: null, isAuthenticated: false }),
 }));
 

@@ -1,30 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
-import { clsx } from 'clsx';
-import { FileText, Download, Trash2, Eye, Plus, Search, Folder, File, Share2, MoreVertical, Shield } from 'lucide-react';
-import { motion } from 'framer-motion';
-
-const documents = [
-  { id: 'DOC-102', name: 'Policy_Terms_V2.pdf', type: 'PDF', size: '1.4 MB', date: 'Oct 28', owner: 'Robert Chen', status: 'Secured' },
-  { id: 'DOC-103', name: 'Claims_Form_Medical.docx', type: 'DOCX', size: '840 KB', date: 'Oct 27', owner: 'Emily Davis', status: 'Shared' },
-  { id: 'DOC-104', name: 'Liability_Chart_Q4.xlsx', type: 'XLSX', size: '3.2 MB', date: 'Oct 26', owner: 'Sarah Jenkins', status: 'Internal' },
-  { id: 'DOC-105', name: 'Identity_Verif_Miller.jpg', type: 'JPG', size: '4.5 MB', date: 'Oct 25', owner: 'Michael Chen', status: 'Secured' },
-];
+import { FileText, Download, Trash2, Eye, Plus, Search, Folder, File, Share2, MoreVertical, Shield, Upload, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useDocumentStore } from '../store/useDocumentStore';
+import { useAccountStore } from '../store/useAccountStore';
+import { usePolicyStore } from '../store/usePolicyStore';
+import { Modal, Button } from '../components/ui';
+import toast from 'react-hot-toast';
 
 export function Documents() {
+  const { documents, addDocument, deleteDocument } = useDocumentStore();
+  const { accounts } = useAccountStore();
+  const { policies } = usePolicyStore();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    type: 'PDF',
+    linkTo: '',
+    status: 'Secured'
+  });
+
+  const filteredDocuments = documents.filter(doc => 
+    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleOpenAdd = () => {
+    setFormData({
+      name: '',
+      type: 'PDF',
+      linkTo: accounts[0]?.id || '',
+      status: 'Secured'
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    addDocument({
+      ...formData,
+      size: `${(Math.random() * 5 + 1).toFixed(1)} MB`,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    });
+    toast.success('Document uploaded');
+    setIsModalOpen(false);
+  };
+
+  const stats = [
+    { l: 'Total Storage', v: '1.2 GB', i: Shield, c: 'text-primary' },
+    { l: 'Total Files', v: documents.length, i: FileText, c: 'text-indigo-500' },
+    { l: 'Secured Docs', v: documents.filter(d => d.status === 'Secured').length, i: Shield, c: 'text-emerald-500' },
+    { l: 'Recent Uploads', v: '2', i: Plus, c: 'text-cyan-500' },
+  ];
+
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Document Management</h1>
-          <p className="text-slate-500 font-medium">Secure local and cloud file storage system</p>
+          <p className="text-slate-500 font-medium italic">Secure local and cloud file storage system</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 bg-white text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-bold shadow-sm">
+          <button className="hidden md:flex items-center gap-2 px-4 py-2 border border-slate-200 bg-white text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-bold shadow-sm">
             <Folder size={18} />
             New Folder
           </button>
-          <button className="gradient-btn flex items-center gap-2 font-bold shadow-lg shadow-primary/20">
+          <button 
+            onClick={handleOpenAdd}
+            className="gradient-btn flex items-center gap-2 font-bold shadow-lg shadow-primary/20"
+          >
             <Plus size={18} />
             Upload File
           </button>
@@ -32,12 +78,7 @@ export function Documents() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[
-          { l: 'Total Storage', v: '124 GB', i: Shield, c: 'text-primary' },
-          { l: 'Total Files', v: '8,412', i: FileText, c: 'text-indigo-500' },
-          { l: 'Secured Docs', v: '2,145', i: Shield, c: 'text-emerald-500' },
-          { l: 'Recent Uploads', v: '14', i: Plus, c: 'text-cyan-500' },
-        ].map((stat, i) => (
+        {stats.map((stat, i) => (
           <div key={i} className="premium-card p-6 border-b-4 border-slate-50 hover:border-primary transition-all group cursor-default">
             <stat.i size={20} className={`${stat.c} mb-3 transition-transform group-hover:scale-110`} />
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.l}</p>
@@ -47,13 +88,15 @@ export function Documents() {
       </div>
 
       <div className="premium-card p-4">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6 px-2 pt-2">
           <div className="relative flex-1 group">
             <Search className="absolute left-3 top-1/2 -transform -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
             <input 
               type="text" 
-              placeholder="Search by file name, tag, or owner..." 
+              placeholder="Search by file name or type..." 
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
@@ -61,22 +104,22 @@ export function Documents() {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">File Name & Type</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Storage ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Upload Date</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Size</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider"></th>
+              <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <th className="px-6 py-4">File Name & Type</th>
+                <th className="px-6 py-4">Linked To</th>
+                <th className="px-6 py-4">Upload Date</th>
+                <th className="px-6 py-4">Size</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {documents.map((doc, i) => (
+              {filteredDocuments.map((doc, i) => (
                 <motion.tr 
                   key={doc.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: i * 0.03 }}
                   className="hover:bg-slate-50/50 group transition-colors"
                 >
                   <td className="px-6 py-5">
@@ -86,11 +129,13 @@ export function Documents() {
                       </div>
                       <div>
                         <div className="font-bold text-slate-800 group-hover:text-primary transition-colors cursor-pointer">{doc.name}</div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{doc.type} • {doc.owner}</div>
+                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{doc.type}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-xs font-mono text-slate-400 tracking-tighter">{doc.id}</td>
+                  <td className="px-6 py-5 text-xs font-mono text-slate-400 tracking-tighter">
+                    {accounts.find(a => a.id === doc.linkTo)?.name || policies.find(p => p.id === doc.linkTo)?.id || doc.linkTo || 'Unlinked'}
+                  </td>
                   <td className="px-6 py-5 text-sm text-slate-500">{doc.date}</td>
                   <td className="px-6 py-5 text-xs text-slate-500 font-bold">{doc.size}</td>
                   <td className="px-6 py-5">
@@ -107,16 +152,92 @@ export function Documents() {
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"><Eye size={16} /></button>
                       <button className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"><Download size={16} /></button>
-                      <button className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"><Trash2 size={16} /></button>
-                      <button className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"><MoreVertical size={16} /></button>
+                      <button 
+                        onClick={() => deleteDocument(doc.id)}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </td>
                 </motion.tr>
               ))}
+              {filteredDocuments.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-slate-400 italic">No documents found</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Upload Document"
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div className="border-2 border-dashed border-slate-100 rounded-2xl p-10 flex flex-col items-center justify-center gap-3 bg-slate-50 group hover:border-primary/30 transition-all cursor-pointer">
+               <Upload size={40} className="text-slate-300 group-hover:text-primary group-hover:scale-110 transition-all" />
+               <p className="text-sm font-bold text-slate-500 group-hover:text-slate-800">Click or drag to upload</p>
+               <p className="text-[10px] text-slate-400 uppercase tracking-widest">PDF, DOCX, XLSX (MAX 10MB)</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Document Name</label>
+              <input
+                required
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g. Policy_Terms_V1_Final"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">File Type</label>
+                <select
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                >
+                  <option>PDF</option>
+                  <option>DOCX</option>
+                  <option>XLSX</option>
+                  <option>JPG</option>
+                  <option>PNG</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Link To</label>
+                <select
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={formData.linkTo}
+                  onChange={(e) => setFormData({ ...formData, linkTo: e.target.value })}
+                >
+                  <optgroup label="Accounts">
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>{acc.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Policies">
+                    {policies.map(p => (
+                      <option key={p.id} value={p.id}>{p.id} - {p.product}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button variant="outline" className="flex-1" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button className="flex-1" type="submit">Verify & Upload</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

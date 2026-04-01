@@ -23,12 +23,12 @@ const menuItems = [
   { id: 'contacts', label: 'Contacts', icon: Users, path: '/contacts', roles: Object.values(roles) },
   { id: 'policies', label: 'Policies', icon: Briefcase, path: '/policies', roles: Object.values(roles) },
   { id: 'products', label: 'Products', icon: FileText, path: '/products', roles: Object.values(roles) },
-  { id: 'networth', label: 'Net Worth', icon: TrendingUp, path: '/networth', roles: [roles.SUPER_ADMIN, roles.MANAGER, roles.STAFF] },
+  { id: 'networth', label: 'Net Worth', icon: TrendingUp, path: '/networth', roles: [roles.ADMIN, roles.MANAGER, roles.STAFF] },
   { id: 'cases', label: 'Case Open', icon: AlertCircle, path: '/cases', roles: Object.values(roles) },
   { id: 'documents', label: 'Documents', icon: FileText, path: '/documents', roles: Object.values(roles) },
-  { id: 'reports', label: 'Reports', icon: BarChart3, path: '/reports', roles: [roles.SUPER_ADMIN, roles.MANAGER, roles.UNDERWRITER] },
-  { id: 'users', label: 'User Management', icon: UserCircle, path: '/users', roles: [roles.SUPER_ADMIN] },
-  { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', roles: [roles.SUPER_ADMIN] },
+  { id: 'reports', label: 'Reports', icon: BarChart3, path: '/reports', roles: [roles.ADMIN, roles.MANAGER, roles.UNDERWRITER] },
+  { id: 'users', label: 'User Management', icon: UserCircle, path: '/users', roles: [roles.ADMIN] },
+  { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', roles: [roles.ADMIN] },
 ];
 
 export function Sidebar() {

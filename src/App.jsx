@@ -14,6 +14,8 @@ import { Reports } from './pages/Reports';
 import { Contacts } from './pages/Contacts';
 import { Users } from './pages/Users';
 import { Settings } from './pages/Settings';
+import { AccountDetail } from './pages/AccountDetail';
+import { Toaster } from 'react-hot-toast';
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -33,6 +35,7 @@ function App() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="accounts" element={<Accounts />} />
+          <Route path="accounts/:id" element={<AccountDetail />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="policies" element={<Policies />} />
           <Route path="products" element={<Products />} />
@@ -44,6 +47,7 @@ function App() {
           <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
+      <Toaster position="top-right" />
     </BrowserRouter>
   );
 }

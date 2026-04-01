@@ -1,89 +1,175 @@
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Download, FileText, Filter, Calendar, Share2 } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { Download, FileText, Filter, Calendar, Share2, TrendingUp, Shield, Activity, PieChart as PieIcon } from 'lucide-react';
+import { usePolicyStore } from '../store/usePolicyStore';
+import { useCaseStore } from '../store/useCaseStore';
+import { useAccountStore } from '../store/useAccountStore';
+import { useNetWorthStore } from '../store/useNetWorthStore';
+import toast from 'react-hot-toast';
 
-const data = [
-  { month: 'Jan', revenue: 4000, claims: 240 },
-  { month: 'Feb', revenue: 3000, claims: 198 },
-  { month: 'Mar', revenue: 2000, claims: 980 },
-  { month: 'Apr', revenue: 2780, claims: 390 },
-  { month: 'May', revenue: 1890, claims: 480 },
-  { month: 'Jun', revenue: 2390, claims: 380 },
-];
+const COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#f43f5e', '#fbbf24', '#10b981'];
 
 export function Reports() {
+  const { policies } = usePolicyStore();
+  const { cases } = useCaseStore();
+  const { accounts } = useAccountStore();
+  const { netWorthRecords } = useNetWorthStore();
+
+  const policyByProduct = useMemo(() => {
+    const counts = policies.reduce((acc, p) => {
+      acc[p.product] = (acc[p.product] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [policies]);
+
+  const caseByStatus = useMemo(() => {
+    const statusMap = { 1: 'New', 2: 'Review', 3: 'Decision', 4: 'Closed' };
+    const counts = cases.reduce((acc, c) => {
+      const label = statusMap[c.step] || 'Unknown';
+      acc[label] = (acc[label] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [cases]);
+
+  const handleExport = (type) => {
+    toast.promise(
+      new Promise((resolve) => setTimeout(resolve, 1500)),
+      {
+        loading: `Generating ${type} report...`,
+        success: `${type} report exported successfully!`,
+        error: 'Export failed.',
+      }
+    );
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Analytics & Reports</h1>
-          <p className="text-slate-500 font-medium">Enterprise Data Intelligence Overview</p>
+          <p className="text-slate-500 font-medium italic">Enterprise Intelligence & Strategic Overview</p>
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 bg-white text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-bold shadow-sm">
             <Calendar size={18} />
-            Period: Last 6 Months
+            Period: All Time
           </button>
-          <button className="gradient-btn flex items-center gap-2 font-bold">
+          <button 
+            onClick={() => handleExport('PDF')}
+            className="gradient-btn flex items-center gap-2 font-bold"
+          >
             <Download size={18} />
-            Download PDF
+            Export Data
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 premium-card p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="premium-card p-6">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-bold text-slate-800">Monthly Revenue Stream</h3>
-            <div className="flex gap-2">
-              <button className="p-2 text-slate-400 hover:text-primary transition-colors"><Filter size={18} /></button>
-              <button className="p-2 text-slate-400 hover:text-primary transition-colors"><Share2 size={18} /></button>
-            </div>
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <Shield size={20} className="text-primary" />
+              Policy Distribution
+            </h3>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">By Product Type</span>
           </div>
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                  cursor={{ fill: '#f8fafc' }}
-                />
-                <Bar dataKey="revenue" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
+            {policyByProduct.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={policyByProduct} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 'bold'}} width={100} />
+                  <Tooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Bar dataKey="value" fill="#4f46e5" radius={[0, 4, 4, 0]} barSize={25} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-slate-400 italic">No policy data</div>
+            )}
           </div>
         </div>
 
         <div className="premium-card p-6">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Recent Reports</h3>
-          <div className="space-y-4">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <Activity size={20} className="text-rose-500" />
+              Claims Status Overview
+            </h3>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">By Workflow Stage</span>
+          </div>
+          <div className="h-80">
+            {caseByStatus.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={caseByStatus} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={8} dataKey="value">
+                    {caseByStatus.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-slate-400 italic">No claim data</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 premium-card p-6">
+          <h3 className="text-lg font-bold text-slate-800 mb-8 flex items-center gap-2">
+             <TrendingUp size={20} className="text-emerald-500" />
+             Net Worth Portfolio Growth
+          </h3>
+          <div className="h-64">
+             <ResponsiveContainer width="100%" height="100%">
+               <AreaChart data={[
+                 { month: 'Jan', val: 120 }, { month: 'Feb', val: 180 }, { month: 'Mar', val: 160 }, 
+                 { month: 'Apr', val: 240 }, { month: 'May', val: 210 }, { month: 'Jun', val: 320 }
+               ]}>
+                 <defs>
+                   <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                     <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                   </linearGradient>
+                 </defs>
+                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+                 <Tooltip />
+                 <Area type="monotone" dataKey="val" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorVal)" />
+               </AreaChart>
+             </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="premium-card p-6">
+          <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <FileText size={20} className="text-indigo-500" />
+            Generated Reports
+          </h3>
+          <div className="space-y-3">
             {[
-              { t: 'Q3 Financial Audit', d: 'Oct 28', s: '2.4 MB' },
-              { t: 'Monthly Claims Summary', d: 'Oct 20', s: '1.1 MB' },
-              { t: 'Agent Performance Index', d: 'Oct 15', s: '840 KB' },
-              { t: 'Policy Renewal Forecast', d: 'Oct 10', s: '3.2 MB' },
+              { t: 'Annual Policy Performance', s: '4.2 MB', d: 'Oct 28' },
+              { t: 'Claim Cycle Time Analysis', s: '1.8 MB', d: 'Oct 25' },
+              { t: 'Revenue by Region Q3', s: '2.1 MB', d: 'Oct 22' },
+              { t: 'Portfolio Risk Assessment', s: '5.4 MB', d: 'Oct 15' },
             ].map((rep, i) => (
-              <div key={i} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-primary/20 transition-all cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors border border-slate-100">
-                    <FileText size={20} />
-                  </div>
-                  <div className="flex-1">
-                    <h5 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors">{rep.t}</h5>
-                    <div className="flex justify-between items-center mt-1">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{rep.d}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">{rep.s}</span>
-                    </div>
-                  </div>
+              <div key={i} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl group hover:border-primary/20 transition-all cursor-pointer">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-700 group-hover:text-primary transition-colors">{rep.t}</span>
+                  <span className="text-[9px] text-slate-400 font-bold uppercase">{rep.d} • {rep.s}</span>
                 </div>
+                <Download size={14} className="text-slate-300 group-hover:text-primary transition-colors" />
               </div>
             ))}
           </div>
-          <button className="w-full mt-6 py-3 text-sm font-bold text-primary hover:bg-primary/5 rounded-xl transition-all border border-transparent hover:border-primary/20">
-            View All Reports
-          </button>
         </div>
       </div>
     </div>

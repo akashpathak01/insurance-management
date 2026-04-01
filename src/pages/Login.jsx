@@ -5,7 +5,7 @@ import { useAuthStore, roles } from '../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 
 const demoUsers = [
-  { id: 'admin', name: 'Alexander Wright', role: roles.SUPER_ADMIN, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50', desc: 'System Administrator' },
+  { id: 'admin', name: 'Alexander Wright', role: roles.ADMIN, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50', desc: 'System Administrator' },
   { id: 'manager', name: 'Sarah Jenkins', role: roles.MANAGER, icon: BarChart3, color: 'text-cyan-600', bg: 'bg-cyan-50', desc: 'Territory Manager' },
   { id: 'staff', name: 'Michael Chen', role: roles.STAFF, icon: User, color: 'text-violet-600', bg: 'bg-violet-50', desc: 'Case Executive' },
   { id: 'underwriter', name: 'Emily Davis', role: roles.UNDERWRITER, icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50', desc: 'Risk Analyst' },

@@ -1,18 +1,81 @@
 import React, { useState } from 'react';
 import { clsx } from 'clsx';
-import { Search, Filter, Plus, MoreHorizontal, User, Mail, Phone, MapPin, ChevronRight, Share2, Edit2, Trash2 } from 'lucide-react';
+import { Search, Filter, Plus, User, Mail, Phone, ChevronRight, Share2, Edit2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const accounts = [
-  { id: 'ACC-1001', name: 'Global Tech Solutions', type: 'Enterprise', contact: 'Sarah Miller', email: 'sarah@globaltech.com', phone: '+1 415-555-0123', status: 'Active', value: '$450,000' },
-  { id: 'ACC-1002', name: 'Apex Logistics', type: 'Mid-Market', contact: 'James Wilson', email: 'j.wilson@apex.com', phone: '+1 212-555-4567', status: 'Pending', value: '$85,000' },
-  { id: 'ACC-1003', name: 'Nova Healthcare', type: 'Enterprise', contact: 'Emily Chen', email: 'emily.c@nova.org', phone: '+1 312-555-8901', status: 'Active', value: '$1.2M' },
-  { id: 'ACC-1004', name: 'Peak Financial', type: 'Small Business', contact: 'Michael Brown', email: 'mbrown@peak.com', phone: '+1 617-555-2345', status: 'Inactive', value: '$12,000' },
-  { id: 'ACC-1005', name: 'Summit Retail', type: 'Mid-Market', contact: 'Laura White', email: 'laura@summit.io', phone: '+1 512-555-6789', status: 'Active', value: '$320,000' },
-];
+import { useAccountStore } from '../store/useAccountStore';
+import { Modal, Button } from '../components/ui';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 export function Accounts() {
+  const { accounts, addAccount, updateAccount, deleteAccount } = useAccountStore();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    name: '',
+    type: 'Mid-Market',
+    contact: '',
+    email: '',
+    phone: '',
+    address: '',
+    status: 'Active',
+    value: '$0'
+  });
+
+  const filteredAccounts = accounts.filter(acc => 
+    acc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    acc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    acc.contact.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleOpenAdd = () => {
+    setEditingAccount(null);
+    setFormData({
+      name: '',
+      type: 'Mid-Market',
+      contact: '',
+      email: '',
+      phone: '',
+      address: '',
+      status: 'Active',
+      value: '$0'
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (acc) => {
+    setEditingAccount(acc);
+    setFormData({ ...acc });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenDelete = (id) => {
+    setDeletingId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (editingAccount) {
+      updateAccount(editingAccount.id, formData);
+      toast.success('Account updated successfully');
+    } else {
+      addAccount(formData);
+      toast.success('Account added successfully');
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleDelete = () => {
+    deleteAccount(deletingId);
+    toast.success('Account deleted successfully');
+    setIsDeleteModalOpen(false);
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -26,7 +89,10 @@ export function Accounts() {
             <Share2 size={18} />
             Export Data
           </button>
-          <button className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all font-bold shadow-lg shadow-primary/20">
+          <button 
+            onClick={handleOpenAdd}
+            className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all font-bold shadow-lg shadow-primary/20"
+          >
             <Plus size={18} />
             Add Account
           </button>
@@ -64,7 +130,7 @@ export function Accounts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {accounts.map((acc, i) => (
+              {filteredAccounts.map((acc, i) => (
                 <motion.tr 
                   key={acc.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -116,9 +182,24 @@ export function Accounts() {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"><Edit2 size={16} /></button>
-                      <button className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"><Trash2 size={16} /></button>
-                      <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all"><ChevronRight size={18} /></button>
+                      <button 
+                        onClick={() => handleOpenEdit(acc)}
+                        className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleOpenDelete(acc.id)}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                      <button 
+                        onClick={() => navigate(`/accounts/${acc.id}`)}
+                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
                     </div>
                   </td>
                 </motion.tr>
@@ -128,15 +209,117 @@ export function Accounts() {
         </div>
         
         <div className="p-4 border-t border-slate-50 flex items-center justify-between mt-4">
-          <div className="text-sm text-slate-400 font-medium italic">Showing <b>1-5</b> of {accounts.length} results</div>
+          <div className="text-sm text-slate-400 font-medium italic">Showing <b>1-{filteredAccounts.length}</b> of {accounts.length} results</div>
           <div className="flex gap-2">
             <button className="px-4 py-2 bg-slate-50 text-slate-400 rounded-lg text-sm font-bold cursor-not-allowed">Previous</button>
             <button className="px-4 py-2 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-bold transition-colors">Next</button>
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingAccount ? 'Edit Account' : 'Add New Account'}
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Account Name</label>
+              <input
+                required
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter account name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Type</label>
+              <select
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                value={formData.type}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              >
+                <option>Enterprise</option>
+                <option>Mid-Market</option>
+                <option>Small Business</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Status</label>
+              <select
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              >
+                <option>Active</option>
+                <option>Pending</option>
+                <option>Inactive</option>
+              </select>
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Primary Contact</label>
+              <input
+                required
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                value={formData.contact}
+                onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                placeholder="Primary contact name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email</label>
+              <input
+                type="email"
+                required
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="email@company.com"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phone</label>
+              <input
+                required
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+1 234-567-890"
+              />
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Address</label>
+              <textarea
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                rows="2"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Full address"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button variant="outline" className="flex-1" onClick={() => setIsModalOpen(false)} type="button">Cancel</Button>
+            <Button className="flex-1" type="submit">{editingAccount ? 'Save Changes' : 'Create Account'}</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Confirm Delete"
+      >
+        <div className="space-y-6">
+          <p className="text-slate-600">Are you sure you want to delete this account? This action cannot be undone.</p>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+            <Button className="flex-1 bg-red-500 hover:bg-red-600" onClick={handleDelete}>Delete Account</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
-
-// Helper for clsx (already imported at top)
